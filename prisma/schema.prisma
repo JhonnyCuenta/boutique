@@ -1,0 +1,206 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String
+  role      UserRole @default(OWNER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum UserRole {
+  OWNER
+}
+
+model Product {
+  id               String        @id @default(cuid())
+  slug             String        @unique
+  name             String
+  category         ProductCategory
+  shortDescription String
+  description      String
+  priceCents       Int
+  currency         String        @default("EUR")
+  imageUrl         String
+  badge            ProductBadge?
+  status           ProductStatus @default(PUBLISHED)
+  frameworks       String[]      @default([])
+  tags             String[]      @default([])
+  includes         String[]      @default([])
+  version          String        @default("1.0.0")
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  assets     ProductAsset[]
+  orderItems OrderItem[]
+  licenses   License[]
+
+  @@index([category, status])
+}
+
+enum ProductCategory {
+  ESX
+  QBCORE
+  UI_HUD
+  MAPPING_MLO
+  ZOMBIES
+  ANTICHEAT
+  JOBS
+  EMS
+  POLICE
+}
+
+enum ProductBadge {
+  NEW
+  BEST_SELLER
+  PREMIUM
+}
+
+enum ProductStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+model ProductAsset {
+  id          String   @id @default(cuid())
+  productId   String
+  product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  blobPath    String
+  fileName    String
+  fileSize    Int?
+  version     String   @default("1.0.0")
+  checksum    String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([productId, isActive])
+}
+
+model Order {
+  id              String      @id @default(cuid())
+  customerEmail   String
+  customerName    String
+  status          OrderStatus @default(PENDING)
+  paymentProvider String      @default("paypal")
+  paypalOrderId   String?     @unique
+  paypalCaptureId String?     @unique
+  amountCents     Int
+  currency        String      @default("EUR")
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  paidAt          DateTime?
+  fulfilledAt     DateTime?
+
+  items OrderItem[]
+}
+
+enum OrderStatus {
+  PENDING
+  APPROVED
+  PAID
+  FULFILLED
+  CANCELLED
+  FAILED
+  REFUNDED
+}
+
+model OrderItem {
+  id         String   @id @default(cuid())
+  orderId    String
+  order      Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId  String
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Restrict)
+  name       String
+  priceCents Int
+  quantity   Int      @default(1)
+  createdAt  DateTime @default(now())
+
+  license License?
+}
+
+model License {
+  id            String        @id @default(cuid())
+  key           String        @unique
+  orderItemId   String        @unique
+  orderItem     OrderItem     @relation(fields: [orderItemId], references: [id], onDelete: Cascade)
+  productId     String
+  product       Product       @relation(fields: [productId], references: [id], onDelete: Restrict)
+  customerEmail String
+  status        LicenseStatus @default(ACTIVE)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  downloadTokens DownloadToken[]
+
+  @@index([customerEmail])
+  @@index([productId])
+}
+
+enum LicenseStatus {
+  ACTIVE
+  REVOKED
+}
+
+model DownloadToken {
+  id        String   @id @default(cuid())
+  tokenHash String   @unique
+  licenseId String
+  license   License  @relation(fields: [licenseId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  maxUses   Int      @default(5)
+  uses      Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([licenseId])
+  @@index([expiresAt])
+}
+
+model PaymentEvent {
+  id          String    @id @default(cuid())
+  provider    String    @default("paypal")
+  eventId     String    @unique
+  type        String
+  paypalOrderId String?
+  captureId   String?   @unique
+  payload      Json
+  processedAt  DateTime?
+  createdAt    DateTime  @default(now())
+
+  @@index([paypalOrderId])
+  @@index([type])
+}
+
+model EmailDeliveryLog {
+  id        String          @id @default(cuid())
+  orderId   String?
+  to        String
+  subject   String
+  provider  String          @default("resend")
+  status    EmailLogStatus  @default(PENDING)
+  providerId String?
+  error     String?
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+
+  @@index([orderId])
+  @@index([to])
+}
+
+enum EmailLogStatus {
+  PENDING
+  SENT
+  SKIPPED
+  FAILED
+}
