@@ -1,5 +1,6 @@
 import { OrderStatus } from '@prisma/client';
 import { NextRequest, NextResponse } from 'next/server';
+import { getUserFromCookies } from '@/lib/auth';
 import { createPayPalOrder } from '@/lib/paypal';
 import { getPrisma } from '@/lib/prisma';
 import { checkoutSchema } from '@/lib/validators';
@@ -11,6 +12,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Panier ou informations client invalides' }, { status: 400 });
     }
 
+    const currentUser = await getUserFromCookies();
     const { customerEmail, customerName, items } = parsed.data;
     const prisma = getPrisma();
     const productIds = [...new Set(items.map((item) => item.productId))];
@@ -37,6 +39,7 @@ export async function POST(request: NextRequest) {
 
     const order = await prisma.order.create({
       data: {
+        customerId: currentUser?.id,
         customerEmail: customerEmail.trim().toLowerCase(),
         customerName: customerName.trim(),
         amountCents,

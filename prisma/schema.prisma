@@ -12,13 +12,16 @@ model User {
   email     String   @unique
   password  String
   name      String
-  role      UserRole @default(OWNER)
+  role      UserRole @default(CUSTOMER)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  orders Order[]
 }
 
 enum UserRole {
   OWNER
+  CUSTOMER
 }
 
 model Product {
@@ -89,6 +92,8 @@ model ProductAsset {
 
 model Order {
   id              String      @id @default(cuid())
+  customerId      String?
+  customer        User?       @relation(fields: [customerId], references: [id], onDelete: SetNull)
   customerEmail   String
   customerName    String
   status          OrderStatus @default(PENDING)
@@ -103,6 +108,9 @@ model Order {
   fulfilledAt     DateTime?
 
   items OrderItem[]
+
+  @@index([customerId])
+  @@index([customerEmail])
 }
 
 enum OrderStatus {

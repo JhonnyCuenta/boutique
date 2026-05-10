@@ -1,13 +1,14 @@
 'use client';
 
-import { LogIn } from 'lucide-react';
+import { UserPlus } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { FormEvent, useState } from 'react';
 
-export function LoginForm() {
+export function RegisterForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -18,45 +19,48 @@ export function LoginForm() {
     setLoading(true);
     setError('');
 
-    const response = await fetch('/api/auth/login', {
+    const response = await fetch('/api/auth/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ name, email, password }),
     });
-    const data = (await response.json()) as { error?: string; user?: { role?: 'OWNER' | 'CUSTOMER' } };
+    const data = (await response.json()) as { error?: string };
     setLoading(false);
 
     if (!response.ok) {
-      setError(data.error || 'Connexion impossible');
+      setError(data.error || 'Creation impossible');
       return;
     }
 
     const requestedNext = searchParams.get('next');
-    const fallback = data.user?.role === 'OWNER' ? '/admin' : '/account';
-    router.push(requestedNext?.startsWith('/') ? requestedNext : fallback);
+    router.push(requestedNext?.startsWith('/') ? requestedNext : '/account');
     router.refresh();
   }
 
   return (
     <form className="auth-card" onSubmit={onSubmit}>
-      <span className="form-chip">Compte MW</span>
-      <h1>Connexion MW</h1>
-      <p>Connectez-vous a votre compte client. Les owners sont rediriges automatiquement vers le panel admin.</p>
+      <span className="form-chip">Client MW</span>
+      <h1>Creer un compte</h1>
+      <p>Votre compte permet de retrouver vos commandes, licences et informations de livraison.</p>
+      <label>
+        Nom / pseudo
+        <input value={name} onChange={(event) => setName(event.target.value)} required minLength={2} />
+      </label>
       <label>
         Email
         <input type="email" value={email} onChange={(event) => setEmail(event.target.value)} required />
       </label>
       <label>
         Mot de passe
-        <input type="password" value={password} onChange={(event) => setPassword(event.target.value)} required />
+        <input type="password" value={password} onChange={(event) => setPassword(event.target.value)} required minLength={8} />
       </label>
       {error ? <div className="form-error">{error}</div> : null}
       <button className="button primary full" type="submit" disabled={loading}>
-        <LogIn size={18} />
-        {loading ? 'Connexion...' : 'Se connecter'}
+        <UserPlus size={18} />
+        {loading ? 'Creation...' : 'Creer mon compte'}
       </button>
       <p className="auth-switch">
-        Pas encore de compte ? <Link href="/register">Creer un compte client</Link>
+        Deja inscrit ? <Link href="/login">Se connecter</Link>
       </p>
     </form>
   );

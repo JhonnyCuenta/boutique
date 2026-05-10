@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { AUTH_COOKIE } from '@/lib/auth';
+import { AUTH_COOKIE_NAMES } from '@/lib/auth';
 
 const PROTECTED_PREFIXES = ['/admin', '/api/admin'];
 
@@ -11,7 +11,7 @@ export function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  const token = request.cookies.get(AUTH_COOKIE)?.value;
+  const token = AUTH_COOKIE_NAMES.map((name) => request.cookies.get(name)?.value).find(Boolean);
   if (!token) {
     if (pathname.startsWith('/api/')) {
       return NextResponse.json({ error: 'Connexion owner requise' }, { status: 401 });

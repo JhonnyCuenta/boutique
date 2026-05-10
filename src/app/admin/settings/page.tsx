@@ -10,7 +10,11 @@ const checks = [
   ['PAYPAL_WEBHOOK_ID', 'PayPal webhook'],
   ['RESEND_API_KEY', 'Email Resend'],
   ['BLOB_READ_WRITE_TOKEN', 'Vercel Blob prive'],
-  ['JWT_SECRET', 'Session owner'],
+  ['JWT_SECRET', 'Sessions owner/client'],
+  ['OWNER1_EMAIL', 'Owner 1 email'],
+  ['OWNER1_PASSWORD', 'Owner 1 password'],
+  ['OWNER2_EMAIL', 'Owner 2 email'],
+  ['OWNER2_PASSWORD', 'Owner 2 password'],
 ];
 
 export default async function AdminSettingsPage() {

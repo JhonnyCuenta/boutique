@@ -18,6 +18,12 @@ export const loginSchema = z.object({
   password: z.string().min(1).max(160),
 });
 
+export const registerSchema = z.object({
+  name: z.string().min(2).max(100),
+  email: z.string().email().max(180),
+  password: z.string().min(8).max(160),
+});
+
 export const productSchema = z.object({
   id: z.string().optional(),
   slug: z.string().min(2).max(90).optional(),

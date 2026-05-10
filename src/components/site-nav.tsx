@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Menu, Shield, ShoppingBag, X } from 'lucide-react';
+import { Menu, Shield, ShoppingBag, UserRound, X } from 'lucide-react';
 import { useState } from 'react';
 import { navItems } from '@/config/store';
 
@@ -27,6 +27,10 @@ export function SiteNav() {
       </nav>
 
       <div className="nav-actions">
+        <Link className="nav-login" href="/account">
+          <UserRound size={16} />
+          Compte
+        </Link>
         <Link className="nav-login" href="/login">
           <Shield size={16} />
           Connexion
@@ -49,6 +53,9 @@ export function SiteNav() {
           ))}
           <Link href="/login" onClick={() => setOpen(false)}>
             Connexion
+          </Link>
+          <Link href="/account" onClick={() => setOpen(false)}>
+            Compte client
           </Link>
         </div>
       ) : null}

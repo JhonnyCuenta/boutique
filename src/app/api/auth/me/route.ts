@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
-import { getOwnerFromCookies } from '@/lib/auth';
+import { getUserFromCookies } from '@/lib/auth';
 
 export async function GET() {
-  const owner = await getOwnerFromCookies();
-  return NextResponse.json({ user: owner ? { id: owner.id, email: owner.email, name: owner.name } : null });
+  const user = await getUserFromCookies();
+  return NextResponse.json({ user: user ? { id: user.id, email: user.email, name: user.name, role: user.role } : null });
 }

@@ -49,6 +49,12 @@ type PayPalConfig = {
   currency: string;
 };
 
+type SessionUser = {
+  email: string;
+  name: string;
+  role: 'OWNER' | 'CUSTOMER';
+};
+
 const storageKey = 'mw-dev-cart-v1';
 
 function readInitialCart() {
@@ -71,6 +77,7 @@ export function Storefront({ products, initialCategory = 'ALL', compact = false 
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [customerEmail, setCustomerEmail] = useState('');
   const [customerName, setCustomerName] = useState('');
+  const [sessionUser, setSessionUser] = useState<SessionUser | null>(null);
   const [notice, setNotice] = useState('');
   const [paypalConfig, setPaypalConfig] = useState<PayPalConfig | null>(null);
   const [paypalLoaded, setPaypalLoaded] = useState(false);
@@ -85,6 +92,18 @@ export function Storefront({ products, initialCategory = 'ALL', compact = false 
       .then((response) => response.json())
       .then((data: PayPalConfig) => setPaypalConfig(data))
       .catch(() => setPaypalConfig({ clientId: '', currency: 'EUR' }));
+  }, []);
+
+  useEffect(() => {
+    fetch('/api/auth/me')
+      .then((response) => response.json())
+      .then((data: { user?: SessionUser | null }) => {
+        if (!data.user) return;
+        setSessionUser(data.user);
+        setCustomerEmail((current) => current || data.user?.email || '');
+        setCustomerName((current) => current || data.user?.name || '');
+      })
+      .catch(() => undefined);
   }, []);
 
   const productMap = useMemo(() => new Map(products.map((product) => [product.id, product])), [products]);
@@ -318,6 +337,7 @@ export function Storefront({ products, initialCategory = 'ALL', compact = false 
               </button>
               <h3>Finaliser votre achat</h3>
               <p>Apres paiement valide, vous recevez automatiquement un email avec la cle licence et le lien de telechargement.</p>
+              {sessionUser ? <div className="checkout-account">Connecte avec {sessionUser.email}</div> : null}
               <div className="checkout-fields">
                 <label>
                   Nom / pseudo
